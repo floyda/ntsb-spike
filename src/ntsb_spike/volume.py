@@ -13,8 +13,9 @@ from .common import answer_field, load_config
 def explode_codes(series: pd.Series) -> pd.Series:
     """Codes may be a list, a delimited string, or a scalar. Normalise to one code per row."""
     def to_list(v):
-        if isinstance(v, list):
-            return v
+        # Parquet round-trips list columns as numpy arrays — accept any non-string sequence.
+        if not isinstance(v, str) and hasattr(v, "__len__"):
+            return list(v)
         if isinstance(v, str):
             return [c.strip() for c in v.replace(";", ",").split(",") if c.strip()]
         return []

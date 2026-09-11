@@ -1,0 +1,464 @@
+openapi: 3.0.1
+info:
+  title: Public
+  description: ''
+  version: '1.0'
+servers:
+  - url: https://api.ntsb.gov/public
+paths:
+  /api/getversion:
+    get:
+      summary: GetVersion
+      description: GetVersion
+      operationId: getversion
+      responses:
+        '200':
+          description: ''
+  /api/csp-report:
+    post:
+      summary: CSPReport
+      description: Get Csp Report
+      operationId: csp-report
+      responses:
+        '200':
+          description: OK
+  /api/Common/v1/GetCase:
+    get:
+      summary: GetCase
+      description: Get aviation event by Mkey or Ntsb Number
+      operationId: get-case
+      parameters:
+        - name: mkey
+          in: query
+          description: Format - int32.
+          schema:
+            type: integer
+            format: int32
+        - name: ntsbNumber
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Error
+  /api/SafetyRecommendations/v1/GetSafetyRecommendations:
+    get:
+      summary: GetSafetyRecommendations
+      description: Get safety recommendations by ntsb number
+      operationId: get-safety-recommendations
+      parameters:
+        - name: ntsbNumber
+          in: query
+          schema:
+            type: string
+        - name: safetyRecNo
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Error
+  /api/Common/v1/GetCasesByDateRange/:
+    get:
+      summary: GetCasesByDateRange
+      description: Get cases by start date and/or end date
+      operationId: get-cases-by-date-range
+      parameters:
+        - name: startDate
+          in: query
+          description: Format - date.
+          schema:
+            type: date
+            format: ''
+        - name: endDate
+          in: query
+          description: Format - date.
+          schema:
+            type: date
+            format: ''
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/Aviation/v1/GetAviationCase/:
+    get:
+      summary: GetAviationCase
+      description: Get aviation case by ntsb number or mkey
+      operationId: get-aviation-case
+      parameters:
+        - name: ntsbNumber
+          in: query
+          description: Format - string.
+          schema:
+            type: string
+        - name: mkey
+          in: query
+          description: Format - int32.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/Aviation/v1/GetAviationDataDictionary:
+    get:
+      summary: GetAviationDataDictionary
+      description: GetAviationDataDictionary
+      operationId: get-aviation-data-dictionary
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/SafetyRecommendations/v1/GetSafetyRecommendationsDataDictionary:
+    get:
+      summary: GetSafetyRecommendationsDataDictionary
+      description: Get Safety Recommendations Data Dictionary
+      operationId: get-safety-recommendations-data-dictionary
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/Highway/v1/GetHighwayDataDictionary:
+    get:
+      summary: GetHighwayDataDictionary
+      description: Get Highway Data Dictionary
+      operationId: get-highway-data-dictionary
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/Hazmat/v1/GetHazmatDataDictionary:
+    get:
+      summary: GetHazmatDataDictionary
+      description: Get Hazmat Data Dictionary
+      operationId: get-hazmat-data-dictionary
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/Hazmat/v1/GetHazmatCase/:
+    get:
+      summary: GetHazmatCase
+      description: Get hazmat case by ntsb number or mkey
+      operationId: get-hazmat-case
+      parameters:
+        - name: ntsbNumber
+          in: query
+          description: Format - string.
+          schema:
+            type: string
+        - name: mkey
+          in: query
+          description: Format - int32.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/Highway/v1/GetHighwayCase/:
+    get:
+      summary: GetHighwayCase
+      description: Get highway event by Mkey or Ntsb Number
+      operationId: get-highway-case
+      parameters:
+        - name: mkey
+          in: query
+          description: Format - int32.
+          schema:
+            type: integer
+            format: int32
+        - name: ntsbNumber
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Error
+  /api/Marine/v1/GetMarineCase/:
+    get:
+      summary: GetMarineCase
+      description: Get marine event by Mkey or Ntsb Number
+      operationId: get-marine-case
+      parameters:
+        - name: mkey
+          in: query
+          description: Format - int32.
+          schema:
+            type: integer
+            format: int32
+        - name: ntsbNumber
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Error
+  /api/Pipeline/v1/GetPipelineCase/:
+    get:
+      summary: GetPipelineCase
+      description: Get Pipeline event by Mkey or Ntsb Number
+      operationId: get-pipeline-case
+      parameters:
+        - name: mkey
+          in: query
+          description: Format - int32.
+          schema:
+            type: integer
+            format: int32
+        - name: ntsbNumber
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Error
+  /api/Railroad/v1/GetRailroadCase/:
+    get:
+      summary: GetRailroadCase
+      description: Get Railroad event by Mkey or Ntsb Number
+      operationId: get-railroad-case
+      parameters:
+        - name: mkey
+          in: query
+          description: Format - int32.
+          schema:
+            type: integer
+            format: int32
+        - name: ntsbNumber
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Error
+  /api/Marine/v1/GetMarineDataDictionary:
+    get:
+      summary: GetMarineDataDictionary
+      description: Get Marine Data Dictionary
+      operationId: get-marine-data-dictionary
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/Pipeline/v1/GetPipelineDataDictionary:
+    get:
+      summary: GetPipelineDataDictionary
+      description: Get Pipeline Data Dictionary
+      operationId: get-pipeline-data-dictionary
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/Railroad/v1/GetRailroadDataDictionary:
+    get:
+      summary: GetRailroadDataDictionary
+      description: Get Railroad Data Dictionary
+      operationId: get-railroad-data-dictionary
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/Common/v1/GetCasesByModifiedDateRange/:
+    get:
+      summary: GetCasesByModifiedDateRange
+      description: Get aviation cases by last revision start date and/or end date
+      operationId: get-cases-by-modified-date-range
+      parameters:
+        - name: startDate
+          in: query
+          description: Format - date.
+          schema:
+            type: date
+            format: ''
+        - name: endDate
+          in: query
+          description: Format - date.
+          schema:
+            type: date
+            format: ''
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/SafetyRecommendations/v1/GetSafetyRecsByModifiedDateRange/:
+    get:
+      summary: GetSafetyRecsByModifiedDateRange
+      description: Get safety recs by last revision start date and/or end date
+      operationId: get-safety-recs-by-modified-date-range
+      parameters:
+        - name: startDate
+          in: query
+          description: Format - date.
+          schema:
+            type: date
+            format: ''
+        - name: endDate
+          in: query
+          description: Format - date.
+          schema:
+            type: date
+            format: ''
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/SafetyRecommendations/v1/GetSafetyRecsByAddressee:
+    get:
+      summary: GetSafetyRecsByAddressee
+      description: Get safety recs by addressee name
+      operationId: get-safety-recs-by-addressee-name
+      parameters:
+        - name: addressee
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+  /api/Common/v2/GetCasesByDateRange/:
+    get:
+      summary: GetCasesByDateRangeV2
+      description: 'Get cases by start/end date, optionally filtered by mode. Results are marker-paginated, up to 1000 records per page. Large date ranges can produce very large payloads; use smaller windows or mode filtering in interactive docs.'
+      operationId: get-cases-by-date-range-v2
+      parameters:
+        - name: startDate
+          in: query
+          description: Format - date.
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: Format - date.
+          schema:
+            type: string
+            format: date
+        - name: mode
+          in: query
+          description: 'Optional mode filter. Allowed values aviation, hazmat, highway, marine, pipeline, railroad.'
+          schema:
+            type: string
+        - name: marker
+          in: query
+          description: Continuation marker from the prior response for the next page.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Error
+  /api/Aviation/v1/GetAviationCasesFiltered/:
+    get:
+      summary: GetAviationCasesFiltered
+      description: Get aviation cases by aircraft registration number
+      operationId: get-aviation-cases-filtered
+      parameters:
+        - name: aircraftRegistrationNumber
+          in: query
+          description: Format - string.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '204':
+          description: No Content
+        '500':
+          description: Internal Error
+components:
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: Ocp-Apim-Subscription-Key
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

@@ -25,6 +25,12 @@ verdicts. Nothing here is the agent. Read `docs/spike-plan.md` before doing anyt
 7. **Stop at the stop points** listed in `docs/agent-prompts.md`. Do not run ahead into the
    next session without Andy confirming the previous one.
 
+## API key
+The NTSB Enterprise API key is never stored in this repo. Scripts read it from the
+`NTSB_API_KEY` environment variable. If it is not set, run the shell function
+`load_env_keys` (defined in Andy's ~/.zshrc) to populate it, e.g.:
+`zsh -ic 'load_env_keys && python -m ntsb_spike.fetch ...'`
+
 ## How to work
 - Fill `config.yaml` from real observations, not assumptions. When a field's role is unclear,
   leave it blank and list it under "unmapped" in the session log.

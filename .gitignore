@@ -13,3 +13,5 @@ config.yaml
 *.mdb
 *.accdb
 labelling/*.filled.csv
+.DS_Store
+src/*.egg-info/

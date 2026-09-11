@@ -42,9 +42,12 @@ def load_test(cfg):
 
 def cmd_sheet(cfg):
     df = load_test(cfg)
-    s = stratified_sample(df, "_occ", n=30)
     idc = cfg["fields"]["id"]
     fact = evidence_field(cfg, "factual_narrative")
+    # Blind-reading an empty account is meaningless — only sample cases with text.
+    has_narrative = df[fact].notna() & (df[fact].astype(str).str.strip() != "")
+    df = df[has_narrative]
+    s = stratified_sample(df, "_occ", n=30)
     sheet = pd.DataFrame({
         "case_id": s[idc].astype(str),
         "factual_account": s[fact],
@@ -79,11 +82,18 @@ def cmd_scan(cfg):
     print("\nEvidence fields vs occurrence code — how many distinct occurrence codes per field value?")
     print("(A field where each value maps to one code is the verdict in disguise — move it to answer.)")
     for role, col in cfg["fields"]["evidence"].items():
-        if not col or col == fact or df[col].nunique() > 200:
+        if not col or col == fact:
             continue
-        per_value = df.groupby(col)["_occ"].nunique()
+        # List-valued columns (e.g. pilot certificates) come back from parquet as
+        # numpy arrays, which aren't hashable — represent them as strings for grouping.
+        vals = df[col]
+        if vals.map(lambda v: not isinstance(v, (str, int, float, bool, type(None)))).any():
+            vals = vals.map(lambda v: str(list(v)) if hasattr(v, "__len__") and not isinstance(v, str) else v)
+        if vals.nunique() > 200:
+            continue
+        per_value = df.assign(_v=vals).groupby("_v")["_occ"].nunique()
         purity = (per_value == 1).mean()
-        print(f"  {role:<20} {col:<30} values: {df[col].nunique():>4}   share of values mapping to exactly one code: {100 * purity:.0f}%")
+        print(f"  {role:<20} {col:<30} values: {vals.nunique():>4}   share of values mapping to exactly one code: {100 * purity:.0f}%")
 
 
 def cmd_score(cfg):

@@ -17,8 +17,9 @@ from .volume import explode_codes
 
 
 def primary_code(v) -> str | None:
-    if isinstance(v, list):
-        return v[0] if v else None
+    # Parquet round-trips list columns as numpy arrays, so accept any non-string sequence.
+    if not isinstance(v, str) and hasattr(v, "__len__"):
+        return v[0] if len(v) else None
     if isinstance(v, str):
         parts = [c.strip() for c in v.replace(";", ",").split(",") if c.strip()]
         return parts[0] if parts else None
