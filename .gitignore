@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+notebooks/*
+!notebooks/.gitkeep
+config.yaml
+.env
+*.zip
+*.mdb
+*.accdb
+labelling/*.filled.csv

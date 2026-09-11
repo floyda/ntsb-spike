@@ -1,0 +1,66 @@
+# Copy to config.yaml and fill in during Session 0.
+# Everything the scripts need to know about the data lives here, so the
+# scripts don't change when you discover what the API actually calls things.
+
+api:
+  # Fill from the CAROL / GetCasesByDateRangeV2 documentation. Do not guess.
+  base_url: ""            # e.g. https://data.ntsb.gov/...
+  endpoint: ""            # the date-range query path
+  auth: none              # none | key | login  (record what the docs say)
+  requests_per_minute: 0  # from the docs, or measured
+  page_size: 0
+  migration_note: ""      # date and what changes, from the docs
+
+fallback:
+  avall_url: ""           # location of avall.zip, from https://data.ntsb.gov/avdata
+  avall_path: data/raw/avall.zip
+
+filters:
+  min_event_year: 2009    # post-2008 coding scheme only
+  ga_only: true           # US Part 91 general aviation
+  closed_only: true
+
+# Map the role each field plays to the actual field name in the data.
+# EVIDENCE fields may be shown to a model. ANSWER fields must never be.
+# Session 4 may move a field from evidence to answer if it turns out to
+# be the verdict in disguise (e.g. a "defining event" column).
+fields:
+  id: ""
+  event_date: ""
+  probable_cause_date: ""
+  status: ""
+
+  evidence:
+    factual_narrative: ""
+    aircraft_make: ""
+    aircraft_model: ""
+    registration: ""
+    engine_type: ""
+    pilot_certificate: ""
+    pilot_total_hours: ""
+    pilot_hours_in_type: ""
+    weather_condition: ""    # VMC / IMC
+    phase_of_flight: ""      # Session 4 decides whether this stays here
+    injury_level: ""
+    docket_url: ""
+
+  answer:
+    analysis_narrative: ""
+    probable_cause: ""
+    occurrence_codes: ""     # may be a list field
+    finding_codes: ""        # may be a list field
+
+splits:
+  dev_max_year: 2019
+  test_years: [2020, 2021, 2022, 2023]
+  open_min_year: 2024
+
+model:
+  provider: anthropic
+  name: ""                 # a small, cheap model for the one-shot ceiling
+  input_cost_per_mtok_gbp: 0.0
+  output_cost_per_mtok_gbp: 0.0
+
+weather:
+  # Iowa Mesonet ASOS archive; confirm the URL and parameters in Session 5.
+  asos_url: ""
