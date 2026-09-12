@@ -386,3 +386,43 @@ dockets: handwritten 6120 + photos), 0 empty. Median docket 3 docs.
 Implication: without OCR the reachable agency is ~25% (conservatively ~22.5%) vs 38%
 with it — still over the 20% build line, so the decision stands; OCR moves from
 "would not build" to the phase-2 item. Report §7/§9 amended.
+
+---
+
+## Session 8 — build brief + phase_of_flight ablation — 2026-09-12 — ~45 min (orchestrator + 1 sonnet subagent)
+
+Did: drafted `docs/build-brief.md` (scope, tool #1, live board, OCR phase 2, eval bars,
+what a build repo needs, new-repo recommendation). Ran the owed ablation:
+`oneshot.py --ablate phase_of_flight --out ablation.no_phase_of_flight.csv` (new flags;
+`build_evidence()` gained an `exclude` param and stays the only payload assembler;
+default path unchanged). Scored without new human labelling
+(`scripts/ablation_phase.py`): Andy's label transferred where the answer string was
+unchanged, else a Haiku equivalence judge that sees no evidence, only the two verdicts.
+
+Found:
+- Structure: occurrence code = 3-digit phase prefix + 3-digit event suffix; every prefix
+  maps to one phase (100%), so phase_of_flight reveals the phase half of the code and
+  nothing of the event half (39 prefixes, 76 suffixes; phase-conditioned baseline 15.0%).
+- Ablated top-1: 35.0% judge-scored, ~55.0% after re-reading the 9 right→wrong flips
+  (8 were wording differences the judge rejected, 1 real change). No-narrative slice
+  unchanged at 12.5%. Reading: ≤2.5 pts of the 57% comes from the coded phase.
+- Cost: $1.26 for the 40-case rerun, $0.88 for 65 judge calls (subscription, nil marginal).
+
+Surprised by:
+- The Haiku judge is badly and one-sidedly miscalibrated against Andy: 62.5% top-1
+  agreement, rejecting 14/23 of his correct answers while accepting 1/17 wrong ones. A
+  "same underlying occurrence" rubric is not enough; free-text answers need code-
+  constrained output or a human. This is the design-notes §5 warning made concrete.
+- 31/40 answers changed wording with phase removed but only 1 changed substance — the
+  model's phrasing is far less stable than its verdict, which is itself an argument for
+  scoring on codes.
+- The model abstained 2 more times without phase (15 → 17).
+
+Judgement calls (Andy to veto): the judge prompt contains the NTSB decoded label and
+probable-cause sentence — answer fields inside a prompt, but as a scorer with no
+evidence present, so no leakage path. Files are `.model.` and flagged as model opinion.
+The 9-flip re-read is the orchestrator's own opinion, recorded in
+`labelling/ablation.no_phase_of_flight.review.model.csv` and counted by
+`scripts/ablation_phase_review.py`.
+
+Not committed. Next: STOP — Andy reviews the brief and decides build here / new repo / pause.

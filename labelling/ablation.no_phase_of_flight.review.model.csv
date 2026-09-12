@@ -1,0 +1,10 @@
+case_id,judge_verdict,reviewer_verdict,note
+WPR24LA029,0,1,ablated top-1 is still a hard landing; original (hard landing) was marked correct by Andy
+ERA21FA189,0,1,ablated top-1 is LOC-I; original was LOC-I (Loss of Control - Inflight); identical answer with the parenthetical dropped
+WPR22FA100,0,1,in-flight breakup vs in-flight structural failure; same occurrence
+ERA20LA234,0,1,loss of control on landing; original (hard/bounced landing loss of control) was marked correct by Andy
+WPR21LA362,0,1,ground loop / swerve on landing roll; original (loss of directional control ground loop) was marked correct by Andy
+WPR23LA294,0,1,fuel starvation; original (fuel exhaustion/starvation) was marked correct by Andy
+CEN22FA240,0,1,LOC-I; original (CTOL/LOC-I) was marked correct by Andy
+WPR20LA126,0,0,changed answer: LOC-I became loss of engine power (NTSB: fuel related); genuinely different top-1 so keep judge verdict
+CEN24LA061,0,1,loss of engine power (partial); original added the governor detail; same occurrence

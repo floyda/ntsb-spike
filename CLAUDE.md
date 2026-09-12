@@ -37,3 +37,7 @@ The NTSB Enterprise API key is never stored in this repo. Scripts read it from t
 - Prefer small, inspectable steps: fetch one month, look at one record, then widen.
 - When a script's TODO can't be resolved from the data you have, say which data would resolve it.
 - Time-box: if a session's task is taking more than twice its estimate, stop and report.
+- Any document Andy must sign off (reports, briefs, plans) is written in simplified
+  technical English: say why each piece of data matters and why each decision is made,
+  give examples, and end with a glossary. Andy is learning this domain's jargon; a
+  terse expert brief cannot be sized or approved. Numbers stay exact and scripted.

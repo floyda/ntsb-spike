@@ -6,12 +6,15 @@ plus an empty `category` column for you to fill (A/B/C/D) on the misses.
 Usage:
     python -m ntsb_spike.oneshot          # runs on 40 stratified held-out cases
     python -m ntsb_spike.oneshot --dry    # builds the prompts and asserts no leakage, calls nothing
+    python -m ntsb_spike.oneshot --ablate ROLE[,ROLE...]   # drop evidence role(s) from build_evidence
+    python -m ntsb_spike.oneshot --out NAME                # output filename under labelling/ (default decidability.csv)
 
 Requires: claude CLI logged in to a subscription. Command issued internally:
     claude -p --model {name} --effort {effort} --tools "" --system-prompt SYSTEM --output-format json --json-schema <schema>
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import subprocess
@@ -44,10 +47,17 @@ class OneShotAnswer(BaseModel):
     abstain: bool = False
 
 
-def build_evidence(cfg: dict, row: pd.Series) -> dict:
-    """The ONLY function that assembles what a model sees. Evidence fields only."""
+def build_evidence(cfg: dict, row: pd.Series, exclude: frozenset[str] = frozenset()) -> dict:
+    """The ONLY function that assembles what a model sees. Evidence fields only.
+
+    `exclude` names evidence roles (config.yaml fields.evidence keys) to omit —
+    used for ablation studies (e.g. `phase_of_flight`). Empty by default, which
+    reproduces the original behaviour exactly.
+    """
     ev = {}
     for role, col in cfg["fields"]["evidence"].items():
+        if role in exclude:
+            continue
         if col and col in row.index:
             val = row[col]
             # Handle arrays (numpy/pandas) by checking if they contain data
@@ -170,7 +180,14 @@ def call_model(cfg: dict, evidence: dict) -> tuple[OneShotAnswer, float | None]:
 
 
 def main() -> None:
-    dry = "--dry" in sys.argv
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--dry", action="store_true")
+    parser.add_argument("--ablate", default="")
+    parser.add_argument("--out", default="decidability.csv")
+    args, _unknown = parser.parse_known_args(sys.argv[1:])
+    dry = args.dry
+    exclude = frozenset(r.strip() for r in args.ablate.split(",") if r.strip())
+    out_name = args.out
     cfg = load_config()
     df = pd.read_parquet("data/processed/filtered.parquet")
     df = df[df["_event_year"].isin(cfg["splits"]["test_years"])]
@@ -184,7 +201,7 @@ def main() -> None:
     rows = []
     total_cost: float = 0.0
     for _, row in sample.iterrows():
-        evidence = build_evidence(cfg, row)
+        evidence = build_evidence(cfg, row, exclude=exclude)
         assert_no_answer_fields(cfg, evidence)
         ans = None
         cost = None
@@ -218,7 +235,7 @@ def main() -> None:
             "model_cost_usd": cost if cost is not None else "",
         })
     LABELLING.mkdir(exist_ok=True)
-    out = LABELLING / "decidability.csv"
+    out = LABELLING / out_name
     pd.DataFrame(rows).to_csv(out, index=False)
     if not dry:
         print(f"total reported cost: ${total_cost:.4f} (would-be API price; subscription marginal cost is nil)")
