@@ -28,8 +28,13 @@ Status values: ☐ untested · ✅ pass · ❌ fail · ⚠️ partial (explain i
 
 ## Decision
 
-Applied the rule in `spike-plan.md` on: ____
+Applied the rule in `spike-plan.md` on: 2026-09-12 (drafted by the agent; awaiting Andy's sign-off)
 
-Outcome: ☐ build the agent · ☐ build the classifier version · ☐ stop · ☐ grey zone (explain)
+Outcome: ☑ build the agent · ☐ build the classifier version · ☐ stop · ☐ grey zone (explain)
 
-Reasoning:
+Reasoning: all five build conditions hold — A1–A3 pass (official API, 100% cause+codes,
+separable factual field); leakage 20% blind / phrases listed (at the ≤20% bar, not under);
+one-shot 57% top-1 beats the 16.2% conditional baseline ~3.5×; agency 38% ≥ 20%;
+cost £0.034/case measured < £0.05. The agent's justification is concentrated: docket
+retrieval for the ~half of recent cases with no factual narrative (88% vs 12% accuracy
+split). See docs/spike-report.md §2 and §9.

@@ -354,3 +354,23 @@ Results (`decidability.py`, `scripts/decidability_crosscheck.py`):
 All assumptions now resolved: A1-A5, A7, A9-A12 pass; A6 pass; A8 partial (by design).
 Next: STOP — Session 7 (apply the decision rule mechanically, draft spike report)
 awaits Andy's go-ahead.
+
+---
+
+## Session 7 — decision and report — 2026-09-12 — ~20 min (orchestrator)
+
+Did: applied the decision rule from spike-plan.md mechanically against the filled
+register; drafted docs/spike-report.md from the template (every number cites its
+script or sheet); filled the Decision block in assumptions.md.
+
+Found: all five build conditions hold → **build the agent**. Deciding numbers:
+57% vs 16.2% (one-shot vs conditional baseline), agency 38% vs 20% bar,
+£0.034/case vs £0.05 bar. Leakage sits exactly AT the 20% bar — recorded as pass
+per the rule's "20% or less", flagged in the report rather than softened.
+
+Framing settled (Andy's question): the agent replaces the analysis step, not the
+investigation — evidence is investigator-gathered; on live cases the agent gives a
+day-1 estimate from the skeleton and revises as the docket fills.
+
+Next: STOP — Andy reviews/edits the report; the decision is his. Open item carried
+into any build brief: the phase_of_flight ablation.
