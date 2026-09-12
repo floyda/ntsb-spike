@@ -29,7 +29,7 @@ def main() -> None:
     rows = []
     for label, case in (("typical", median_case), ("long", long_case)):
         ev = build_evidence(cfg, case)
-        n_in = len(enc.encode(json.dumps(ev)))
+        n_in = len(enc.encode(json.dumps(ev, default=lambda o: o.tolist() if hasattr(o, "tolist") else str(o))))
         cost = (n_in * m["input_cost_per_mtok_gbp"] + out_tokens * m["output_cost_per_mtok_gbp"]) / 1_000_000
         rows.append((label, n_in, out_tokens, round(cost, 4)))
     t = pd.DataFrame(rows, columns=["case", "tokens_in", "tokens_out", "gbp_per_call"])

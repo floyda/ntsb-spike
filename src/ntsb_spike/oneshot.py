@@ -7,14 +7,17 @@ Usage:
     python -m ntsb_spike.oneshot          # runs on 40 stratified held-out cases
     python -m ntsb_spike.oneshot --dry    # builds the prompts and asserts no leakage, calls nothing
 
-Requires: pip install -e ".[model]" and ANTHROPIC_API_KEY in the environment.
+Requires: claude CLI logged in to a subscription. Command issued internally:
+    claude -p --model {name} --effort {effort} --tools "" --system-prompt SYSTEM --output-format json --json-schema <schema>
 """
 from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 
+import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field, ValidationError
 
@@ -45,8 +48,19 @@ def build_evidence(cfg: dict, row: pd.Series) -> dict:
     """The ONLY function that assembles what a model sees. Evidence fields only."""
     ev = {}
     for role, col in cfg["fields"]["evidence"].items():
-        if col and col in row.index and pd.notna(row[col]):
-            ev[role] = row[col] if not isinstance(row[col], (list, dict)) else json.dumps(row[col])
+        if col and col in row.index:
+            val = row[col]
+            # Handle arrays (numpy/pandas) by checking if they contain data
+            # For scalars, use standard pd.notna check
+            try:
+                is_notnull = pd.notna(val) if not isinstance(val, np.ndarray) else val.size > 0
+            except (ValueError, TypeError):
+                is_notnull = val is not None
+            if is_notnull:
+                # Convert numpy arrays to lists for JSON serialization
+                if isinstance(val, np.ndarray):
+                    val = val.tolist()
+                ev[role] = val if not isinstance(val, (list, dict)) else json.dumps(val)
     return ev
 
 
@@ -58,20 +72,101 @@ def assert_no_answer_fields(cfg: dict, evidence: dict) -> None:
     return None
 
 
-def call_model(cfg: dict, evidence: dict) -> OneShotAnswer:
-    import anthropic  # optional dependency
+def call_model(cfg: dict, evidence: dict) -> tuple[OneShotAnswer, float | None]:
+    """Call the Claude model via the claude CLI in headless mode.
 
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    msg = client.messages.create(
-        model=cfg["model"]["name"],
-        max_tokens=600,
-        system=SYSTEM,
-        messages=[{"role": "user", "content": json.dumps(evidence, indent=1)}],
-    )
-    text = msg.content[0].text.strip().strip("`")
-    if text.startswith("json"):
-        text = text[4:]
-    return OneShotAnswer.model_validate_json(text)
+    Args:
+        cfg: Configuration dict with model settings.
+        evidence: Evidence payload (no answer fields).
+
+    Returns:
+        Tuple of (validated OneShotAnswer, total_cost_usd or None).
+
+    Raises:
+        RuntimeError: If CLI exits nonzero or times out.
+    """
+    schema = json.dumps(OneShotAnswer.model_json_schema())
+    model_name = cfg["model"]["name"]
+    effort = cfg["model"].get("effort", "medium")
+
+    # Build claude CLI command
+    cmd = [
+        "claude",
+        "-p",
+        "--model",
+        model_name,
+        "--effort",
+        effort,
+        "--tools",
+        "",
+        "--system-prompt",
+        SYSTEM,
+        "--output-format",
+        "json",
+        "--json-schema",
+        schema,
+    ]
+
+    # Prepare subprocess environment: remove API key to force subscription auth
+    env = os.environ.copy()
+    env.pop("ANTHROPIC_API_KEY", None)
+    env.pop("CLAUDECODE", None)
+    env.pop("CLAUDE_CODE_ENTRYPOINT", None)
+
+    # Run CLI with evidence as stdin
+    try:
+        result = subprocess.run(
+            cmd,
+            input=json.dumps(evidence, indent=1),
+            capture_output=True,
+            text=True,
+            timeout=300,
+            env=env,
+        )
+    except subprocess.TimeoutExpired as e:
+        raise RuntimeError(f"claude CLI timeout (300s): {e.stderr}") from e
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"claude CLI exited with code {result.returncode}: {result.stderr}"
+        )
+
+    # Parse JSON response (CLI returns an array of events; extract the result)
+    try:
+        output = json.loads(result.stdout)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"failed to parse JSON response: {e}") from e
+
+    # CLI returns an array; find the result object (type=result, subtype=success)
+    response = None
+    if isinstance(output, list):
+        for item in output:
+            if item.get("type") == "result" and item.get("subtype") == "success":
+                response = item
+                break
+    elif isinstance(output, dict):
+        # Fallback: might be a single dict response
+        response = output
+
+    if not response:
+        raise RuntimeError(
+            f"no successful result in CLI output: {json.dumps(output)[:200]}"
+        )
+
+    # Extract cost
+    cost: float | None = response.get("total_cost_usd")
+
+    # Extract and validate answer
+    if "structured_output" in response and response["structured_output"]:
+        ans = OneShotAnswer.model_validate(response["structured_output"])
+    else:
+        # Fallback: parse result field as JSON
+        text = response.get("result", "").strip().strip("`")
+        if text.startswith("json"):
+            text = text[4:]
+        ans = OneShotAnswer.model_validate_json(text)
+
+    return ans, cost
 
 
 def main() -> None:
@@ -87,17 +182,24 @@ def main() -> None:
     fc = answer_field(cfg, "finding_codes")
 
     rows = []
+    total_cost: float = 0.0
     for _, row in sample.iterrows():
         evidence = build_evidence(cfg, row)
         assert_no_answer_fields(cfg, evidence)
+        ans = None
+        cost = None
         if dry:
             ans = None
+            cost = None
         else:
             try:
-                ans = call_model(cfg, evidence)
-            except ValidationError as e:
-                print(f"schema failure on {row[idc]}: {e}", file=sys.stderr)
+                ans, cost = call_model(cfg, evidence)
+                if cost is not None:
+                    total_cost += cost
+            except (ValidationError, RuntimeError, json.JSONDecodeError) as e:
+                print(f"model failure on {row[idc]}: {e}", file=sys.stderr)
                 ans = None
+                cost = None
         rows.append({
             "case_id": str(row[idc]),
             "ntsb_occurrence": row["_occ"],
@@ -113,10 +215,13 @@ def main() -> None:
             "top3_correct": "",
             "category": "",             # you: A / B / C / D on misses (see spike-plan.md)
             "tool_that_would_fix_it": "",  # you: for C cases — precedent / weather / history / docket / regulation
+            "model_cost_usd": cost if cost is not None else "",
         })
     LABELLING.mkdir(exist_ok=True)
     out = LABELLING / "decidability.csv"
     pd.DataFrame(rows).to_csv(out, index=False)
+    if not dry:
+        print(f"total reported cost: ${total_cost:.4f} (would-be API price; subscription marginal cost is nil)")
     print(f"{'DRY RUN — ' if dry else ''}wrote {out} with {len(rows)} cases. Fill in the last four columns, save as decidability.filled.csv.")
 
 

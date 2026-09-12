@@ -15,3 +15,4 @@ config.yaml
 labelling/*.filled.csv
 .DS_Store
 src/*.egg-info/
+oneshot_run.stderr.log

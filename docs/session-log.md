@@ -260,3 +260,97 @@ Numbers produced (and which script): all of the above, baseline.py.
 
 Next: Sessions 5 & 6 (cost, tools, one-shot ceiling, decidability). All three
 kill-risk sessions (0, 4, 3) have now PASSED.
+
+---
+
+## Sessions 5 & 6 — cost, tools, one-shot ceiling — 2026-09-11 — ~45 min (orchestrated: 4 subagents; dry-run, eval run and docs by the orchestrator)
+
+Did:
+- No API key exists — Andy has a Claude subscription only. Verified (claude-code-guide
+  subagent, against `claude --help` + docs) that the Claude Code CLI headless mode covers
+  everything: `claude -p --model claude-sonnet-5 --effort medium --tools "" --system-prompt
+  ... --output-format json --json-schema ...`, prompt on stdin, subscription auth.
+  Rewired `oneshot.call_model()` to subprocess that command (python-senior-dev subagent;
+  build_evidence untouched except numpy→list serialization; env scrubbed of
+  ANTHROPIC_API_KEY/CLAUDECODE for the child). `--tools ""` is the leakage-critical flag:
+  the model cannot read repo files, so build_evidence() stays the only input path.
+- Ran cost.py (A7), the Iowa Mesonet METAR probe (A10, `scripts/a10_metar_probe.py`),
+  docket PDF extraction on two dockets (A9, `scripts/a9_pdf_extract.py`).
+- `oneshot.py --dry` leakage assertion passed; then the real 40-case stratified run:
+  40/40 answered, 0 schema/CLI failures. `labelling/decidability.csv` written.
+
+Found:
+- A7 ✅ but with a lesson: static estimate £0.0043/case (cost.py, prompt+300 out tokens)
+  vs measured £0.0336/case on the real run (`scripts/oneshot_summary.py`) — thinking
+  tokens at effort=medium are ~8× the payload. Under the £0.05 line either way.
+- A10 ✅: 3/3 stored METARs recovered byte-identical from the Mesonet archive (0-min gap).
+- A9 ✅ split verdict: NTSB-authored born-digital PDFs extract perfectly with pypdf;
+  pilot-submitted Form 6120s are scans (image-only) needing OCR — route by document class.
+- Run health (oneshot_summary.py): abstention 15/40 (37.5%), confidence mean 0.49
+  (min 0.05, max 0.90). No accuracy computed — that is Andy's labelling call.
+
+Surprised by:
+- The abstention rate: the model declined to name a cause on 15/40 held-out cases —
+  and the cross-tab (oneshot_summary.py) is essentially perfect: 15 of the 16
+  no-factual-narrative cases abstained, 0 of the 24 with a narrative did. Abstention
+  IS narrative absence. The decidability question for those 15 is therefore pre-framed:
+  B (docket would supply the missing facts) vs D (not obtainable) — and the one-shot
+  accuracy story splits into "accuracy given a narrative" vs "coverage without one".
+- Measured cost 8× the token-arithmetic estimate — reasoning tokens, not evidence
+  payload, are the cost driver. cost.py's out_tokens=300 was the wrong mental model.
+- `docketPage` null on all 19,641 records — docket URLs must be built from mKey.
+- `observationTimeUtc` sometimes holds local time; METAR fetches must key on the
+  ob's own ddhhmmZ group.
+
+Changed my mind about:
+- Needing an API key at all for the spike. The CLI's reported total_cost_usd doubles
+  as the A7 measurement instrument.
+
+Numbers produced (and which script): cost table (cost.py); METAR matches
+(scripts/a10_metar_probe.py); extraction stats (scripts/a9_pdf_extract.py); run
+health + measured cost (scripts/oneshot_summary.py).
+
+Next: STOP — Andy fills occurrence_correct / top3_correct / category /
+tool_that_would_fix_it in labelling/decidability.csv (save as decidability.filled.csv).
+Then decidability.py + A6, and the Session 6 phase_of_flight ablation.
+
+### Addendum (2026-09-12) — what a fresh case actually contains
+
+Prompted by Andy's question mid-labelling: does a case arrive with the investigation
+findings already in it? Fetched this month's cases (35 records, 2026-09-01..12) and
+profiled all 6,812 open cases by age (`scripts/fresh_case_profile.py`):
+
+- **The evidence/answer boundary holds live**: zero `Ongoing` cases carry findings,
+  analysis or probableCause. (145 apparent exceptions are all `completionStatus: "N/A"`
+  foreign-authority cases — a live pipeline must filter on == "Ongoing", not != "Completed".)
+- **But `events[]` is 100% populated from day 1**, including the coded defining event
+  (a 1-day-old case already had eventCode 300096 "Takeoff / Nose over/nose down",
+  isDefiningEvent=true). Investigator-assigned what-happened taxonomy exists pre-closure —
+  it also means phase_of_flight (from the defining event) is genuinely available to a
+  live agent, which retroactively supports Andy's evidence call; the Session 6 ablation
+  still measures what it smuggles in.
+- **First two weeks are thin**: prelim narrative 4% (arrives weeks out, plateaus ~40-43%),
+  METAR 17%, pilot flight-time matrix 0%, no factual narrative; solid skeleton only
+  (aircraft, location, injuries, basic weather, event codes).
+- Implication: a live "answer as evidence arrives" board is really a months-long
+  trickle — day-0 output would rest on event codes + docket + external tools, with
+  prelim text joining late. Numbers: scripts/fresh_case_profile.py.
+
+### Addendum (2026-09-12) — decidability scored, A6 filled
+
+Andy labelled the 40-case sheet (three form iterations along the way: evidence
+payload embedded so A-vs-B/C/D is judgeable; NTSB codes decoded to labels; a real
+autosave bug found and fixed — marks weren't persisting; plus list rendering).
+
+Results (`decidability.py`, `scripts/decidability_crosscheck.py`):
+- One-shot ceiling 57% top-1 / 65% top-3 vs baseline 16.2/32.2 — ~3.5× lift.
+- Misses 17/40; A:0 B:14 C:1 D:0 (2 blank). Agency = 42% × 88% = **38%** → A6 PASS.
+- The split IS the story: 88% accuracy with a factual narrative, 12% without.
+  13/14 no-narrative misses labelled B. The agent's justification is almost entirely
+  "fetch the docket when the record has no narrative" — plus the day-1 skeleton
+  finding above, that is also exactly the live-case shape.
+- A:0 is notable: when the evidence was in front of it, the model never misread it.
+
+All assumptions now resolved: A1-A5, A7, A9-A12 pass; A6 pass; A8 partial (by design).
+Next: STOP — Session 7 (apply the decision rule mechanically, draft spike report)
+awaits Andy's go-ahead.
