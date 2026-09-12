@@ -112,3 +112,39 @@ Goal: apply the decision rule mechanically and draft the spike report.
 
 STOP. Andy reviews and edits the report; the decision is his.
 ```
+
+## /goal — Post-spike: from report to build brief
+
+```
+Read CLAUDE.md, docs/spike-report.md (the outcome), docs/assumptions.md (the evidence),
+and the 2026-09-12 addenda in docs/session-log.md. The spike is COMPLETE and committed:
+decision = build the agent (one-shot 57% vs 16.2% baseline; agency 38%, floor ~25%
+without OCR; £0.034/case). Andy has signed off on the report — do not re-litigate it.
+
+You are the orchestrator: delegate grunt work to subagents; keep judgement calls here.
+Model calls go through the claude CLI in headless mode (see oneshot.py's call_model —
+subscription auth, no API key; --tools "" whenever the payload must be the only input).
+NTSB API key: NTSB_API_KEY env var via load_env_keys. Raw data never goes in git.
+
+Goal: turn the spike's findings into a build brief Andy can size, then start only what
+he green-lights.
+
+1. Draft docs/build-brief.md. Ground every claim in the spike numbers. It must cover:
+   - Scope framing (report §9): the agent replaces the analysis step, not the
+     investigation; narrative-conditional pipeline (cheap path at 88% vs tool loop).
+   - Tool #1: docket retrieval + born-digital PDF extraction (fixes 13/17 misses;
+     scripts/b_docket_probe.py shows 9/14 dockets readable without OCR).
+   - Live board: filter completionStatus == "Ongoing"; poll dockets and timestamp
+     document arrivals prospectively (nothing temporal is recoverable after the fact —
+     prelims are deleted at closure, dockets have no per-document dates).
+   - Phase 2: OCR/vision for handwritten 6120 scans (buys agency 25% → 38%).
+   - Eval plan: dev/test splits already defined; baseline.py and oneshot numbers are
+     the bars to beat; state what "the agent wins" means numerically.
+2. Run the owed phase_of_flight ablation before the brief is final: rerun the 40-case
+   one-shot with phase_of_flight removed from evidence, diff top-1/top-3, and state
+   what the defining-event coding smuggles in. Put the number in the brief.
+3. List what the build repo needs that this spike repo does not have (it may be a new
+   repo — recommend, don't decide).
+
+STOP. Andy reviews the brief and decides: build here, new repo, or pause.
+```

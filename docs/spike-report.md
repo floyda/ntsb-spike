@@ -118,7 +118,15 @@ First three things:
    territory (88% one-shot) — cheap path; no-narrative cases get the tool loop.
 3. **A live board on `completionStatus == "Ongoing"`** (not ≠ Completed — foreign
    `N/A` cases carry verdicts), scoring the agent's standing answer against each
-   NTSB verdict as it publishes (~median 140 days later).
+   NTSB verdict as it publishes (~median 140 days later). One design constraint,
+   probed directly: docket documents carry **no per-document dates** — the listing
+   has only docket-level Creation/Last-Modified/Release dates (matching the API's
+   `docketOpenDate`), HTTP Last-Modified reflects server caching, and PDF
+   CreationDate is a rough authored-date proxy absent on scans. The evidence-arrival
+   timeline therefore **cannot be reconstructed retroactively**; the live board must
+   record it prospectively — poll each open case's docket page, diff the document
+   list, timestamp arrivals itself. Together with the API deleting prelims at
+   closure, the temporal story of an investigation exists only if we capture it live.
 
 On OCR: not tool #1, but not skippable either. Without it, 5 of the 14 B-case dockets
 (the small scan-plus-photos CA-class ones) are unreadable, which cuts the reachable
