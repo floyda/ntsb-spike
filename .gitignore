@@ -12,7 +12,6 @@ config.yaml
 *.zip
 *.mdb
 *.accdb
-labelling/*.filled.csv
 .DS_Store
 src/*.egg-info/
 oneshot_run.stderr.log

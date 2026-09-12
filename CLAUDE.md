@@ -1,5 +1,9 @@
 # CLAUDE.md — standing instructions for any agent working in this repo
 
+**Status: spike complete, decision: build.** This repo is frozen as the citable record —
+see `docs/spike-report.md` (outcome and numbers) and `docs/build-brief.md` (what to
+build next). The agent itself is built in `../ntsb-probable-cause/`.
+
 ## What this repo is
 A pre-build spike. The question is whether NTSB aviation investigation data can support
 an agent that determines probable cause from evidence, evaluated against the NTSB's own
@@ -41,3 +45,60 @@ The NTSB Enterprise API key is never stored in this repo. Scripts read it from t
   technical English: say why each piece of data matters and why each decision is made,
   give examples, and end with a glossary. Andy is learning this domain's jargon; a
   terse expert brief cannot be sized or approved. Numbers stay exact and scripted.
+
+## Commands and data flow
+
+Python ≥3.11. Setup:
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e .                    # add the `model` extra (anthropic) to run oneshot.py:
+pip install -e ".[model]"
+cp config.example.yaml config.yaml  # then fill in after Session 0
+```
+
+There are no tests and no linter config. One module per spike task under
+`src/ntsb_spike/`, one-off probes under `scripts/`.
+
+The API key is never in the repo; scripts read `NTSB_API_KEY` from the environment. If
+it isn't set, load it from Andy's shell function:
+
+```bash
+zsh -ic 'load_env_keys && python -m ntsb_spike.fetch 2022-03-01 2022-03-31'
+```
+
+Commands, one per module (verified against each module's own usage docstring/argparse):
+
+```bash
+python -m ntsb_spike.fetch <start:YYYY-MM-DD> <end:YYYY-MM-DD>  # pull a date range into data/raw/
+python -m ntsb_spike.inspect_record [case_id]      # every field of one case, evidence vs answer
+python -m ntsb_spike.fields                        # completeness table, narrative-length stats
+python -m ntsb_spike.volume                        # cases/year, time-to-close, code distributions, splits
+python -m ntsb_spike.baseline                      # unconditional and conditional modal baselines
+python -m ntsb_spike.leakage sheet|scan|score       # blind-read sheet, phrase scan, scoring
+python -m ntsb_spike.cost                          # token/cost estimate
+python -m ntsb_spike.oneshot [--dry] [--ablate ROLE[,ROLE...]] [--out NAME]
+                                                    # one-shot model run on 40 stratified held-out cases;
+                                                    # --dry builds prompts and asserts no leakage, calls nothing
+python -m ntsb_spike.decidability                  # scores labelling/decidability.filled.csv
+python scripts/decidability_crosscheck.py          # narrative / no-narrative split, after decidability.py
+```
+
+Data flow: `fetch.py` writes `data/raw/fetched=YYYY-MM-DD/cases_*.json` →
+`common.load_raw_frame()` flattens with `pd.json_normalize` plus `derived.*` columns
+(event codes, finding codes, pilot hours, FAR part, phase of flight) → `apply_filters()`
+keeps post-2008, Part 91, Completed → `data/processed/filtered.parquet`, which every
+downstream script reads.
+
+Model calls go through the `claude` CLI in headless mode on a subscription (see
+`oneshot.call_model`): `claude -p --model … --effort … --tools "" --system-prompt SYSTEM
+--output-format json --json-schema <schema>`, with `ANTHROPIC_API_KEY` stripped from the
+env so the subscription is used rather than metered API billing. A scheduled build
+service needs the real Anthropic API instead, which is why the cost cap matters there.
+
+Key data facts already verified (do not re-probe): base URL `https://api.ntsb.gov/public`,
+endpoint `GetCasesByDateRangeV2` with an `Ocp-Apim-Subscription-Key` header and marker-based
+pagination (`hasMore` / `nextMarker`) at up to 1000/page; `docketPage` is null on every
+record, so the docket URL is built as `https://data.ntsb.gov/Docket?ProjectID={mKey}`;
+occurrence code = 3-digit phase prefix + 3-digit event suffix; historical METARs come
+byte-identical from the Iowa Mesonet ASOS archive (params in `config.yaml`).

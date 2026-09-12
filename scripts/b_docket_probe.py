@@ -28,7 +28,7 @@ SCRATCH = Path(
     "fd970ff8-524c-451f-86f4-27a2ebab5e10/scratchpad/b_dockets"
 )
 BASE = "https://data.ntsb.gov"
-UA = {"User-Agent": "ntsb-spike research probe (contact: andyfloyd86@gmail.com)"}
+UA = {"User-Agent": "ntsb-spike research probe (contact: https://github.com/floyda/ntsb-spike)"}
 
 # case_id -> mKey, taken from data/processed/filtered.parquet (see repo history)
 CASES = {
