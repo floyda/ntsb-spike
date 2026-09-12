@@ -80,7 +80,11 @@ not the evidence payload, dominate. Full 3,000-case held-out eval ≈ £101 meas
 nil marginal cost via `claude -p`. Tools: historical METARs recover **byte-identical**
 from the Iowa Mesonet archive (3/3, `scripts/a10_metar_probe.py`); docket PDFs split
 by class — NTSB-authored born-digital documents extract cleanly with pypdf,
-pilot-submitted scans need OCR (`scripts/a9_pdf_extract.py`).
+pilot-submitted scans need OCR (`scripts/a9_pdf_extract.py`). Probing all 14 B-case
+dockets directly (`scripts/b_docket_probe.py`): **9/14 contain at least one substantive
+born-digital document** (conservatively 8 — one hit is a garbled OCR layer); the other
+5 are small CA-class dockets holding only a scanned handwritten Form 6120 plus photos —
+unreadable without OCR.
 
 ## 8. Surprises
 - Only ~52% of 2020–23 cases carry a factual narrative — and that absence, not model
@@ -116,9 +120,13 @@ First three things:
    `N/A` cases carry verdicts), scoring the agent's standing answer against each
    NTSB verdict as it publishes (~median 140 days later).
 
-Would not build: OCR for scanned pilot forms (defer), precedent search as an early
-tool (zero demand in the miss labels), historical prelim reconstruction (the API
-destroys it — accept live-only).
+On OCR: not tool #1, but not skippable either. Without it, 5 of the 14 B-case dockets
+(the small scan-plus-photos CA-class ones) are unreadable, which cuts the reachable
+agency from 38% to ~25% (conservatively ~22.5%) — still over the 20% line, so the
+decision stands, but OCR of the handwritten Form 6120 is the phase-2 item that buys
+back the last third. Would not build early: precedent search (zero demand in the miss
+labels) and historical prelim reconstruction (the API destroys prelims — accept
+live-only).
 
 Owed before the build brief is final: the phase_of_flight ablation (what does the
 NTSB's defining-event coding smuggle into the 57%?).

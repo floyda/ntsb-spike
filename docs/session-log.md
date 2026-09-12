@@ -374,3 +374,15 @@ day-1 estimate from the skeleton and revises as the docket fills.
 
 Next: STOP — Andy reviews/edits the report; the decision is his. Open item carried
 into any build brief: the phase_of_flight ablation.
+
+### Addendum (2026-09-12) — OCR question: are B-case dockets readable without it?
+
+Andy asked whether skipping OCR renders most dockets unreadable. Probed all 14
+B-labelled miss dockets (`scripts/b_docket_probe.py`, 57 requests): 9/14 RICH
+(≥1 substantive born-digital doc — records of conversation, memos, factual reports;
+conservatively 8, one hit is a garbled OCR layer), 5/14 scan-only (all small CA-class
+dockets: handwritten 6120 + photos), 0 empty. Median docket 3 docs.
+
+Implication: without OCR the reachable agency is ~25% (conservatively ~22.5%) vs 38%
+with it — still over the 20% build line, so the decision stands; OCR moves from
+"would not build" to the phase-2 item. Report §7/§9 amended.
