@@ -426,3 +426,75 @@ The 9-flip re-read is the orchestrator's own opinion, recorded in
 `scripts/ablation_phase_review.py`.
 
 Not committed. Next: STOP — Andy reviews the brief and decides build here / new repo / pause.
+
+---
+
+## Addendum (2026-09-13) — docket shape: is choosing what to read a real decision?
+
+Andy reopened the spike for one measurement. The question came out of the build's S0
+design: A6 (agency 38%) shows that *fetching* the docket changes the answer; it does not
+show that *choosing what to fetch* does. If a docket is small enough to read whole, a
+fixed "fetch every readable document, one call" pipeline gets the whole 38%, and a tool
+loop adds nothing that can be measured. The median of 3 documents came from 14 B-case
+dockets only, skewed toward small CA dockets.
+
+Did: `scripts/docket_shape_probe.py`. Development split only (event years 2015–2019;
+held-out untouched), 40 dockets in each of four strata taken from the NTSB number and
+injury level — CA, LA non-fatal, LA fatal, FA — weighted back to the dev-split
+population (CA 6,126 · LA non-fatal 4,608 · FA 2,015 · LA fatal 529). Stage 1 read the
+160 docket listings (160 requests, 0 errors, parsed rows equal the page's item count on
+all 160). Stage 2 downloaded every non-photo PDF in 8 dockets per stratum (219 PDFs) and
+extracted all pages with pypdf. Tokens are estimated as characters / 4; no model called.
+
+Found:
+- **Most dockets are small.** Population-weighted: median 4 documents and 14 non-photo
+  pages; p90 11 documents and 51 pages. By stratum, median non-photo pages: CA 10,
+  LA non-fatal 17.5, LA fatal 18 (p90 160.5, max 657), FA 44 (p90 128.1, max 457).
+- **Most dockets fit in one call.** Estimated readable tokens, median: CA 5,352,
+  LA non-fatal 4,415, LA fatal 3,250, FA 11,752. All 16 CA and LA non-fatal dockets are
+  under 10,000. Population-weighted, 0.89 of dockets are under 10,000 estimated tokens
+  and 0.97 under 33,783 — the input the whole £0.05 line would buy at $2/MTok, an upper
+  bound because thinking tokens dominated cost in A7.
+- **The large tail is fatal cases, and it is bulk, not breadth.** Largest: CEN16LA281
+  ~117,600 estimated tokens, of which two weather attachments are ~39,400 and ~40,000
+  and the weather study ~23,500. In the 8 LA-fatal text dockets, weather documents hold
+  ~115,300 estimated tokens. Other bulk among the 12 largest documents: a radio
+  transcript (~19,000) and two "Statement of Party Representatives" submissions
+  (~19,700 and ~23,000).
+- **Party submissions are common in fatal dockets.** Present in 0.62 of FA, 0.25 of LA
+  fatal, 0.18 of LA non-fatal, 0 of CA. They are written by the manufacturer or operator
+  and can argue a cause. The build's docket filter (0013, S2) has to decide their role.
+  No title in the 160 listings suggests a case-level final report or analysis (the one
+  regex hit is a "Sound Spectrum Analysis").
+- **Formats.** CA dockets are PDF only; 0.52 of FA and 0.30 of LA-fatal dockets also hold
+  non-PDF files (csv, gif, kml, mp4, wav, wma, xlsx, zip). 2 of 160 dockets are empty.
+  Of 219 PDFs: 152 born-digital, 19 partial, 48 scan. Maintenance records are the most
+  scan-heavy category (13 of 25).
+
+Surprised by:
+- **Dev-era Form 6120s carry a text layer.** 18 of 27 extracted as born-digital. Read
+  directly (GAA17CA348, ERA15CA209, GAA18CA165): scanned forms with an Adobe LiveCycle
+  OCR layer — checkbox marks and handwriting come out garbled, but the pilot's typed
+  account is legible ("After flying a stable approach the aircraft ground looped on
+  rollout."). No dev-era docket in stage 2 was scan-only; 5 of the 14 2020+ B-case
+  dockets were. Docket practice appears to differ between eras. Not measured on
+  2020+ dockets here.
+- **OCR is not only a 6120 problem.** WPR18LA098 holds a 40-page scanned engine
+  examination report and scanned maintenance records; its readable text is ~2,400
+  estimated tokens against 69 scanned pages.
+
+Reading: for about four in five dev-split cases (CA and LA non-fatal), reading the whole
+docket is cheap and there is no choice of what to read. A loop that "decides" there is a
+pipeline in costume. Where dockets are large (fatal cases), most of the excess is weather
+data dumps, transcripts and party submissions — which a fixed title filter could also
+drop. So selection *could* earn its place only on the fatal minority, and it has to beat
+a filtered fetch-everything pipeline at equal cost, not just the no-docket ablation.
+
+Caveats: event years 2015–2019 only; 8 dockets per stratum in stage 2 (small); tokens
+estimated; title categories are regular expressions (a judgement); closed-case dockets
+are complete, where a live docket fills over months; one encrypted PDF not read
+(pypdf needs `cryptography`).
+
+Next: STOP — Andy decides whether the build's S3 evaluation gains a fetch-everything
+arm, and whether a listing-only pass on 2020+ dockets is worth touching the held-out
+years for.

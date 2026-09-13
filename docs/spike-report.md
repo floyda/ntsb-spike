@@ -138,3 +138,26 @@ live-only).
 
 Owed before the build brief is final: the phase_of_flight ablation (what does the
 NTSB's defining-event coding smuggle into the 57%?).
+
+## 10. Addendum (2026-09-13): docket shape
+
+*Added after the decision; the sections above are unchanged. Source:
+`scripts/docket_shape_probe.py`, session-log addendum of the same date, register A13.*
+
+The 38% in §2 measures that **fetching** the docket changes the answer. It does not
+measure that **choosing what to fetch** does. That second claim is what a tool loop
+needs, and it depends on docket size. Measured on 160 development-split dockets
+(2015–2019, stratified by investigation class and fatality, weighted to the population):
+
+- Median docket: 4 documents, 14 non-photo pages; 90th percentile 11 documents, 51 pages.
+- 89% of dockets hold under 10,000 estimated tokens of readable text; 97% fit inside the
+  input the whole £0.05 line would buy. Every CA and non-fatal LA docket sampled was
+  under 10,000.
+- The large dockets are fatal cases, and their size is mostly weather data, radio
+  transcripts and party submissions.
+
+What this means: for about four in five cases the whole docket can be read in one call,
+so there is nothing for an agent to choose. The build must therefore compare its tool
+loop against a fixed "read every readable document" pipeline at equal cost, not only
+against the model with no docket. If the loop does not beat that pipeline, the honest
+result is that retrieval was warranted and the loop was not.
